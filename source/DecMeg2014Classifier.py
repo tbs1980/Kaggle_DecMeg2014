@@ -3,7 +3,7 @@ from Features import CreateFeatures
 import sys
 from scipy.io import loadmat
 from LogisticRegression import LogReg
-from sklearn.linear_model import LogisticRegression
+from SVM import SuppVectMch
 
 class DecMeg2014Classifier:
 	"""
@@ -35,7 +35,7 @@ class DecMeg2014Classifier:
 		print "shape before =",np.shape(XX)
 		XX=cf.ApplyTimeWindow(XX, self._tmin, self._tmax, sfreq,tmin_original)
 		print "shape after =",np.shape(XX)
-		num_components=40
+		num_components=50
 		cf.ApplySVD(XX,num_components)
 		XX=cf.ApplyZnorm(XX)
 		return cf.ReshapeToFeaturesVector(XX)
@@ -122,7 +122,8 @@ class DecMeg2014Classifier:
 		print "Testset:", self._X_test.shape
 		
 	def RunClassifier(self):
-		clfr=LogReg()
+		#clfr=LogReg()
+		clfr=SuppVectMch()
 		
 		clfr.Train(self._X_train, self._y_train)
 		
@@ -139,10 +140,10 @@ class DecMeg2014Classifier:
 if __name__ == '__main__':
 	if len(sys.argv) == 2 :
 		dmc=DecMeg2014Classifier(sys.argv[1])
-		subjects_train=range(1,2)
+		subjects_train=range(1,10)
 		dmc.MakeTrainData(subjects_train)
 		
-		subjects_test=range(8, 9)
+		subjects_test=range(15, 16)
 		dmc.MakeValidationData(subjects_test)
 		
 		dmc.RunClassifier()
