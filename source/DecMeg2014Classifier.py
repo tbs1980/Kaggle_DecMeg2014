@@ -23,7 +23,7 @@ class DecMeg2014Classifier:
 		self._tmax = 0.5
 		print "Restricting MEG data to the interval [%s, %s]sec." % (self._tmin, self._tmax)
 		
-	def ProcessData(self,XX,sfreq,tmin_original):
+	def ProcessData(self,XX,sfreq,tmin_original,nSVD):
 		"""
 		Process data 
 		@param XX a matrix of the shape [trial x channel x time]
@@ -32,15 +32,16 @@ class DecMeg2014Classifier:
 		"""
 		cf=CreateFeatures()
 	
-		print "shape before =",np.shape(XX)
 		XX=cf.ApplyTimeWindow(XX, self._tmin, self._tmax, sfreq,tmin_original)
-		print "shape after =",np.shape(XX)
-		num_components=50
-		cf.ApplySVD(XX,num_components)
 		XX=cf.ApplyZnorm(XX)
+		cmin=5
+		cmax=40
+		#cf.ApplyFilter(XX,cmin,cmax)
+		num_components=nSVD
+		cf.ApplySVD(XX,num_components)
 		return cf.ReshapeToFeaturesVector(XX)
 
-	def MakeTrainData(self,subjects_train):
+	def MakeTrainData(self,subjects_train,nSVD):
 		"""
 		A function for creating the traing data
 		@param subjects_train A vector containing the train data numbers e.g range(1,12)
@@ -73,7 +74,7 @@ class DecMeg2014Classifier:
 			print "yy:", yy.shape
 			print "sfreq:", sfreq
 			
-			XX=self.ProcessData(XX,sfreq,tmin_original)		
+			XX=self.ProcessData(XX,sfreq,tmin_original,nSVD)		
 		
 			self._X_train.append(XX)
 			self._y_train.append(yy)
@@ -84,7 +85,7 @@ class DecMeg2014Classifier:
 
 	
 	
-	def MakeValidationData(self,subjects_test):
+	def MakeValidationData(self,subjects_test,nSVD):
 		"""
 		A function for creating validation data
 		@param subjects_test A vector containing the test data numbers e.g range(1,12)
@@ -110,7 +111,7 @@ class DecMeg2014Classifier:
 			print "ids:", ids.shape
 			print "sfreq:", sfreq
 			
-			XX=self.ProcessData(XX,sfreq,tmin_original)
+			XX=self.ProcessData(XX,sfreq,tmin_original,nSVD)
 			
 			self._X_test.append(XX)
 			self._ids_test.append(ids)
@@ -122,8 +123,8 @@ class DecMeg2014Classifier:
 		print "Testset:", self._X_test.shape
 		
 	def RunClassifier(self):
-		#clfr=LogReg()
-		clfr=SuppVectMch()
+		clfr=LogReg()
+		#clfr=SuppVectMch()
 		
 		clfr.Train(self._X_train, self._y_train)
 		
@@ -134,22 +135,34 @@ class DecMeg2014Classifier:
 		error=sum(abs(self._y_pred-self._y_test))
 		total=self._y_pred.size
 		return (total-error)/float(total)*100.
+		
+	def MakeSubmissionFile(self,filename_submission):
+		print "Creating submission file", filename_submission
+		f = open(filename_submission, "w")
+		print >> f, "Id,Prediction"
+		for i in range(len(y_pred)):
+			print >> f, str(ids_test[i]) + "," + str(y_pred[i])
+		f.close()	
 
 
 ####################################################################################################	
 if __name__ == '__main__':
-	if len(sys.argv) == 2 :
+	if len(sys.argv) == 3 :
 		dmc=DecMeg2014Classifier(sys.argv[1])
-		subjects_train=range(1,10)
-		dmc.MakeTrainData(subjects_train)
+		nSVD=sys.argv[2]
+
+		subjects_train=[1,3,5,7,9,11,13]#range(1,2)
+		dmc.MakeTrainData(subjects_train,nSVD)
 		
 		subjects_test=range(15, 16)
-		dmc.MakeValidationData(subjects_test)
+		dmc.MakeValidationData(subjects_test,nSVD)
 		
 		dmc.RunClassifier()
 		
-		print "score= ",dmc.ValidationScore()
+		print "============================="
+		print "         score= ",dmc.ValidationScore()
+		print "============================="
 	else:
-		print "usage: python ",sys.argv[0],"<path-to-data>"
-		print "example: python",sys.argv[0], "./data"
+		print "usage: python ",sys.argv[0],"<path-to-data> <numSVD>"
+		print "example: python",sys.argv[0], "./data 10"
 	

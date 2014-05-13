@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.fftpack
 
 class CreateFeatures:
 	"""
@@ -36,8 +37,8 @@ class CreateFeatures:
 			mat=XX[i,:,:]
 			u,s,v=np.linalg.svd(mat,full_matrices=False)
 			snew=np.zeros(np.shape(s))
-			if num_components > snew.size-1 :
-				print "input num_components ",num_components,"is > snew.size-1",snew.size-1
+			if num_components > snew.size-1 or num_components < 0:
+				print "input num_components ",num_components
 				print "changin to ",snew.size-1
 				num_components=snew.size-1				
 			snew[0:num_components]=s[0:num_components]
