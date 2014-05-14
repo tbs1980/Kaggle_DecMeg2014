@@ -37,8 +37,7 @@ class DecMeg2014Classifier:
 		cmin=5
 		cmax=40
 		#cf.ApplyFilter(XX,cmin,cmax)
-		num_components=nSVD
-		cf.ApplySVD(XX,num_components)
+		cf.ApplySVD(XX,nSVD)
 		return cf.ReshapeToFeaturesVector(XX)
 
 	def MakeTrainData(self,subjects_train,nSVD):

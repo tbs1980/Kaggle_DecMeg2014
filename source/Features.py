@@ -37,11 +37,11 @@ class CreateFeatures:
 			mat=XX[i,:,:]
 			u,s,v=np.linalg.svd(mat,full_matrices=False)
 			snew=np.zeros(np.shape(s))
-			if num_components > snew.size-1 or num_components < 0:
+			if int(num_components) > snew.size-1 or num_components < 0:
 				print "input num_components ",num_components
 				print "changin to ",snew.size-1
 				num_components=snew.size-1				
-			snew[0:num_components]=s[0:num_components]
+			snew[0:int(num_components)]=s[0:int(num_components)]
 			S=np.diag(snew)
 			XX[i,:,:]=np.dot(u,np.dot(S,v))
 		
