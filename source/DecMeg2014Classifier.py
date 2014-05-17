@@ -37,7 +37,7 @@ class DecMeg2014Classifier:
 		cmin=5
 		cmax=40
 		#cf.ApplyFilter(XX,cmin,cmax)
-		cf.ApplySVD(XX,nSVD)
+		#cf.ApplySVD(XX,nSVD)
 		return cf.ReshapeToFeaturesVector(XX)
 
 	def MakeTrainData(self,subjects_train,nSVD):
@@ -122,12 +122,12 @@ class DecMeg2014Classifier:
 		print "Testset:", self._X_test.shape
 		
 	def RunClassifier(self):
-		clfr=LogReg()
-		#clfr=SuppVectMch()
+		#clfr=LogReg()
+		self._clfr=SuppVectMch()
 		
-		clfr.Train(self._X_train, self._y_train)
+		self._clfr.Train(self._X_train, self._y_train)
 		
-		self._y_pred=clfr.Predict(self._X_test)
+		self._y_pred=self._clfr.Predict(self._X_test)
 		
 	
 	def ValidationScore(self):
@@ -140,8 +140,19 @@ class DecMeg2014Classifier:
 		f = open(filename_submission, "w")
 		print >> f, "Id,Prediction"
 		for i in range(len(y_pred)):
-			print >> f, str(ids_test[i]) + "," + str(y_pred[i])
-		f.close()	
+			print >> f, str(self._ids_test[i]) + "," + str(self._y_pred[i])
+		f.close()
+		
+	def ValidationProbs(self,valid_file):
+		df=self._clfr.DecisionFunction(self._X_test)
+		print "shape =",np.shape(df)
+		print "Creating validation probability file", valid_file
+		f = open(valid_file, "w")
+		print >> f, "Id,Prediction"
+		for i in range(len(self._y_pred)):
+			print >> f, str(self._ids_test[i]) + "," + str(self._y_pred[i]) + "," + str(self._y_test[i]) + "," + str(df[i][0])
+		f.close()
+		
 
 
 ####################################################################################################	
@@ -150,10 +161,10 @@ if __name__ == '__main__':
 		dmc=DecMeg2014Classifier(sys.argv[1])
 		nSVD=sys.argv[2]
 
-		subjects_train=[1,3,5,7,9,11,13]#range(1,2)
+		subjects_train=[1,3,5,7,9,11,13]#range(1,2)#
 		dmc.MakeTrainData(subjects_train,nSVD)
 		
-		subjects_test=range(15, 16)
+		subjects_test=[2,4,6]#range(, 16)
 		dmc.MakeValidationData(subjects_test,nSVD)
 		
 		dmc.RunClassifier()
@@ -161,6 +172,8 @@ if __name__ == '__main__':
 		print "============================="
 		print "         score= ",dmc.ValidationScore()
 		print "============================="
+		
+		#dmc.ValidationProbs("valid_prob.txt")
 	else:
 		print "usage: python ",sys.argv[0],"<path-to-data> <numSVD>"
 		print "example: python",sys.argv[0], "./data 10"
