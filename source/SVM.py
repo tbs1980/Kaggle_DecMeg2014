@@ -5,7 +5,8 @@ class SuppVectMch:
 	A class for running logistic regression.
 	"""
 	def __init__(self):
-		self._clf = svm.SVC(cache_size=1000,probability=True)
+		self._clf = svm.SVC(cache_size=1000,probability=False)
+		
 		print "Classifier:"
 		print self._clf
 

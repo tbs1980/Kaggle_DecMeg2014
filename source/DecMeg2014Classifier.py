@@ -121,6 +121,40 @@ class DecMeg2014Classifier:
 		self._y_test = np.concatenate(self._y_test)
 		print "Testset:", self._X_test.shape
 		
+	def MakeTestData(self,subjects_test,nSVD):
+		"""
+		A function for creating test data
+		@param subjects_test A vector containing the test data numbers e.g range(1,12)
+		"""
+	
+		print "Creating the testset."
+		
+		for subject in subjects_test:
+			filename = self._Path2Data+'/train_subject%02d.mat' % subject
+			print "Loading", filename
+			data = loadmat(filename, squeeze_me=True)
+			XX = data['X']
+			yy = data['y']
+			ids = data['Id']
+			sfreq = data['sfreq']
+			tmin_original = data['tmin']
+			print "Dataset summary:"
+			print "XX:", XX.shape
+			print "ids:", ids.shape
+			print "sfreq:", sfreq
+			
+			XX=self.ProcessData(XX,sfreq,tmin_original,nSVD)
+			
+			self._X_test.append(XX)
+			self._ids_test.append(ids)
+			self._y_test.append(yy)
+		
+		self._X_test = np.vstack(self._X_test)
+		self._ids_test = np.concatenate(self._ids_test)
+		self._y_test = np.concatenate(self._y_test)
+		print "Testset:", self._X_test.shape
+
+
 	def RunClassifier(self):
 		#clfr=LogReg()
 		self._clfr=SuppVectMch()
