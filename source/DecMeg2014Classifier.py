@@ -130,11 +130,10 @@ class DecMeg2014Classifier:
 		print "Creating the testset."
 		
 		for subject in subjects_test:
-			filename = self._Path2Data+'/train_subject%02d.mat' % subject
+			filename = self._Path2Data+'/test_subject%02d.mat' % subject
 			print "Loading", filename
 			data = loadmat(filename, squeeze_me=True)
 			XX = data['X']
-			yy = data['y']
 			ids = data['Id']
 			sfreq = data['sfreq']
 			tmin_original = data['tmin']
@@ -147,17 +146,15 @@ class DecMeg2014Classifier:
 			
 			self._X_test.append(XX)
 			self._ids_test.append(ids)
-			self._y_test.append(yy)
 		
 		self._X_test = np.vstack(self._X_test)
 		self._ids_test = np.concatenate(self._ids_test)
-		self._y_test = np.concatenate(self._y_test)
 		print "Testset:", self._X_test.shape
 
 
 	def RunClassifier(self):
-		#clfr=LogReg()
-		self._clfr=SuppVectMch()
+		self._clfr=LogReg()
+		#self._clfr=SuppVectMch()
 		
 		self._clfr.Train(self._X_train, self._y_train)
 		
@@ -173,7 +170,7 @@ class DecMeg2014Classifier:
 		print "Creating submission file", filename_submission
 		f = open(filename_submission, "w")
 		print >> f, "Id,Prediction"
-		for i in range(len(y_pred)):
+		for i in range(len(self._y_pred)):
 			print >> f, str(self._ids_test[i]) + "," + str(self._y_pred[i])
 		f.close()
 		
@@ -195,19 +192,21 @@ if __name__ == '__main__':
 		dmc=DecMeg2014Classifier(sys.argv[1])
 		nSVD=sys.argv[2]
 
-		subjects_train=[1,3,5,7,9,11,13]#range(1,2)#
+		subjects_train=[1,3]#range(1,2)#
 		dmc.MakeTrainData(subjects_train,nSVD)
 		
-		subjects_test=[2,4,6]#range(, 16)
-		dmc.MakeValidationData(subjects_test,nSVD)
+		subjects_test=[17,18]#range(, 16)
+		#dmc.MakeValidationData(subjects_test,nSVD)
+		dmc.MakeTestData(subjects_test,nSVD)
 		
 		dmc.RunClassifier()
 		
-		print "============================="
-		print "         score= ",dmc.ValidationScore()
-		print "============================="
+		#print "============================="
+		#print "         score= ",dmc.ValidationScore()
+		#print "============================="
 		
 		#dmc.ValidationProbs("valid_prob.txt")
+		dmc.MakeSubmissionFile("test_submission.csv")
 	else:
 		print "usage: python ",sys.argv[0],"<path-to-data> <numSVD>"
 		print "example: python",sys.argv[0], "./data 10"
