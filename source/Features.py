@@ -45,6 +45,21 @@ class CreateFeatures:
 			S=np.diag(snew)
 			XX[i,:,:]=np.dot(u,np.dot(S,v))
 		
+	def ApplyICA(self,XX,num_components):
+		"""
+		Apply ICA to each trial and take the most important componetns
+		
+		@param XX a matrix of the shape [trial x channel x time]
+		@param num_components number of componetns to consider in reduction
+		"""
+		print "appling ICA with componetns",num_components
+		print
+		for i in range(np.shape(XX)[0]):
+			mat=XX[i,:,:]
+			ica = FastICA(n_components=num_components)
+			S_ = ica.fit_transform(mat)
+			XX[i,:,:]= S_
+			
 	def ApplyFilter(self,XX,cutoff_min,cutoff_max):
 		"""
 		Apply a frequency-filter to the time series.

@@ -37,7 +37,7 @@ class DecMeg2014Classifier:
 		cmin=5
 		cmax=40
 		#cf.ApplyFilter(XX,cmin,cmax)
-		#cf.ApplySVD(XX,nSVD)
+		cf.ApplySVD(XX,nSVD)
 		return cf.ReshapeToFeaturesVector(XX)
 
 	def MakeTrainData(self,subjects_train,nSVD):
@@ -192,10 +192,10 @@ if __name__ == '__main__':
 		dmc=DecMeg2014Classifier(sys.argv[1])
 		nSVD=sys.argv[2]
 
-		subjects_train=[1,3]#range(1,2)#
+		subjects_train=range(1,17)#
 		dmc.MakeTrainData(subjects_train,nSVD)
 		
-		subjects_test=[17,18]#range(, 16)
+		subjects_test=range(17, 24)
 		#dmc.MakeValidationData(subjects_test,nSVD)
 		dmc.MakeTestData(subjects_test,nSVD)
 		
@@ -206,7 +206,7 @@ if __name__ == '__main__':
 		#print "============================="
 		
 		#dmc.ValidationProbs("valid_prob.txt")
-		dmc.MakeSubmissionFile("test_submission.csv")
+		dmc.MakeSubmissionFile("orchid_submission.csv")
 	else:
 		print "usage: python ",sys.argv[0],"<path-to-data> <numSVD>"
 		print "example: python",sys.argv[0], "./data 10"
