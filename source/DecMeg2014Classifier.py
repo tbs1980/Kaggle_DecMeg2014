@@ -188,14 +188,14 @@ class DecMeg2014Classifier:
 
 ####################################################################################################	
 if __name__ == '__main__':
-	if len(sys.argv) == 3 :
+	if len(sys.argv) == 4 :
 		dmc=DecMeg2014Classifier(sys.argv[1])
 		nSVD=sys.argv[2]
 
-		subjects_train=range(1,17)#
+		subjects_train=range(1,2)#
 		dmc.MakeTrainData(subjects_train,nSVD)
 		
-		subjects_test=range(17, 24)
+		subjects_test=range(17, 18)
 		#dmc.MakeValidationData(subjects_test,nSVD)
 		dmc.MakeTestData(subjects_test,nSVD)
 		
@@ -206,8 +206,8 @@ if __name__ == '__main__':
 		#print "============================="
 		
 		#dmc.ValidationProbs("valid_prob.txt")
-		dmc.MakeSubmissionFile("orchid_submission.csv")
+		dmc.MakeSubmissionFile(sys.argv[3])
 	else:
-		print "usage: python ",sys.argv[0],"<path-to-data> <numSVD>"
-		print "example: python",sys.argv[0], "./data 10"
+		print "usage: python ",sys.argv[0],"<path-to-data> <numSVD> <output-file>"
+		print "example: python",sys.argv[0], "./data 10 ./submission.csv"
 	
