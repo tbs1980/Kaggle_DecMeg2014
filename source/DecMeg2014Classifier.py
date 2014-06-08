@@ -192,10 +192,10 @@ if __name__ == '__main__':
 		dmc=DecMeg2014Classifier(sys.argv[1])
 		nSVD=sys.argv[2]
 
-		subjects_train=range(1,2)#
+		subjects_train=range(1,17)#
 		dmc.MakeTrainData(subjects_train,nSVD)
 		
-		subjects_test=range(17, 18)
+		subjects_test=range(17, 24)
 		#dmc.MakeValidationData(subjects_test,nSVD)
 		dmc.MakeTestData(subjects_test,nSVD)
 		
