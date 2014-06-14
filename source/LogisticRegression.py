@@ -25,3 +25,12 @@ class LogReg:
 		y_pred = self._clf.predict(X_test)
 		
 		return y_pred
+		
+	def PredictProb(self,X_test):
+		"""
+		Predict the results.
+		"""
+		print "Predicting probabilities."
+		y_pred_prob = self._clf.predict_proba(X_test)
+		
+		return y_pred_prob

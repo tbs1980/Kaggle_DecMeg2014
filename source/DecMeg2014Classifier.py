@@ -19,6 +19,7 @@ class DecMeg2014Classifier:
 		self._ids_test = []
 		self._y_test = []
 		self._y_pred=[]
+		self._y_pred_prob=[]
 		self._tmin = 0.0
 		self._tmax = 0.5
 		print "Restricting MEG data to the interval [%s, %s]sec." % (self._tmin, self._tmax)
@@ -160,10 +161,25 @@ class DecMeg2014Classifier:
 		
 		self._y_pred=self._clfr.Predict(self._X_test)
 		
+	def RunClassifierWithProb(self):
+		self._clfr=LogReg()
+		#self._clfr=SuppVectMch()
+		
+		self._clfr.Train(self._X_train, self._y_train)
+		
+		self._y_pred_prob=self._clfr.PredictProb(self._X_test)
 	
 	def ValidationScore(self):
 		error=sum(abs(self._y_pred-self._y_test))
 		total=self._y_pred.size
+		return (total-error)/float(total)*100.
+
+	def ValidationScoreProb(self,cutoff):
+		prob=self._y_pred_prob
+		ppred=[(prob[:,1]>cutoff)*1][0]
+		#print np.shape(ppred),np.shape(self._y_test)
+		error=sum(abs(ppred-self._y_test))
+		total=self._y_test.size
 		return (total-error)/float(total)*100.
 		
 	def MakeSubmissionFile(self,filename_submission):
@@ -184,6 +200,14 @@ class DecMeg2014Classifier:
 			print >> f, str(self._ids_test[i]) + "," + str(self._y_pred[i]) + "," + str(self._y_test[i]) + "," + str(df[i][0])
 		f.close()
 		
+	def MakeProbFile(self,filename_prob):
+		print "Creating probability file", filename_prob
+		f = open(filename_prob, "w")
+		print >> f, "Id,Prediction Prob"
+		#print np.shape(self._y_pred_prob)
+		for i in range(len(self._y_pred_prob)):
+			print >> f, str(self._ids_test[i]) + "," + str(self._y_pred_prob[i][0]) + "," + str(self._y_pred_prob[i][1]) + "," + str(self._y_test[i])
+		f.close()
 
 
 ####################################################################################################	
@@ -192,21 +216,29 @@ if __name__ == '__main__':
 		dmc=DecMeg2014Classifier(sys.argv[1])
 		nSVD=sys.argv[2]
 
-		subjects_train=range(1,17)#
+		subjects_train=range(1,2)#range(1,17)#
 		dmc.MakeTrainData(subjects_train,nSVD)
 		
-		subjects_test=range(17, 24)
-		#dmc.MakeValidationData(subjects_test,nSVD)
-		dmc.MakeTestData(subjects_test,nSVD)
+		subjects_test=range(10,11)#range(17, 24)
+		dmc.MakeValidationData(subjects_test,nSVD)
+		#dmc.MakeTestData(subjects_test,nSVD)
 		
-		dmc.RunClassifier()
+		#dmc.RunClassifier()
+		dmc.RunClassifierWithProb()
 		
-		#print "============================="
+		print "============================="
 		#print "         score= ",dmc.ValidationScore()
-		#print "============================="
+		print "0.3         score= ",dmc.ValidationScoreProb(0.3)
+		print "0.4         score= ",dmc.ValidationScoreProb(0.4)
+		print "0.5         score= ",dmc.ValidationScoreProb(0.5)
+		print "0.6         score= ",dmc.ValidationScoreProb(0.6)
+		print "0.7         score= ",dmc.ValidationScoreProb(0.7)
+		print "============================="
 		
 		#dmc.ValidationProbs("valid_prob.txt")
-		dmc.MakeSubmissionFile(sys.argv[3])
+		#dmc.MakeSubmissionFile(sys.argv[3])
+		#dmc.MakeProbFile(sys.argv[3])
+		#dmc.ValidationScoreProb(0.6)
 	else:
 		print "usage: python ",sys.argv[0],"<path-to-data> <numSVD> <output-file>"
 		print "example: python",sys.argv[0], "./data 10 ./submission.csv"
