@@ -1,5 +1,7 @@
 import numpy as np
 import scipy.fftpack
+from sklearn.decomposition import FastICA
+from sklearn.decomposition import MiniBatchSparsePCA
 
 class CreateFeatures:
 	"""
@@ -54,12 +56,59 @@ class CreateFeatures:
 		"""
 		print "appling ICA with componetns",num_components
 		print
+		nc=int(num_components)
+		RetXX=np.zeros((np.shape(XX)[0],np.shape(XX)[1],nc))
+		#RetXX=np.zeros((np.shape(XX)[0],np.shape(XX)[1],np.shape(XX)[2]))
 		for i in range(np.shape(XX)[0]):
-			mat=XX[i,:,:]
-			ica = FastICA(n_components=num_components)
-			S_ = ica.fit_transform(mat)
-			XX[i,:,:]= S_
-			
+			#print "trial ",i
+			S=XX[i,:,:]
+			#S /= S.std(axis=0)
+			ica = FastICA(n_components=nc,algorithm='deflation')
+			S_ = ica.fit_transform(S)
+			RetXX[i,:,:]= S_
+		
+		return RetXX
+
+	def ApplyRandomizedPCA(self,XX,num_components):
+		"""
+		Apply RandomizedPCA to each trial and take the most important componetns
+		
+		@param XX a matrix of the shape [trial x channel x time]
+		@param num_components number of componetns to consider in reduction
+		"""
+		print "appling ApplyRandomizedPCA with componetns",num_components
+		print
+		nc=int(num_components)
+		RetXX=np.zeros((np.shape(XX)[0],np.shape(XX)[1],nc))
+		#RetXX=np.zeros((np.shape(XX)[0],np.shape(XX)[1],np.shape(XX)[2]))
+		for i in range(np.shape(XX)[0]):
+			S=XX[i,:,:]
+			pca = RandomizedPCA(n_components=nc)
+			S_ = pca.fit_transform(S)
+			RetXX[i,:,:]= S_
+		
+		return RetXX
+
+	def ApplyMiniBatchSparsePCA(self,XX,num_components):
+		"""
+		Apply MiniBatchSparsePCA to each trial and take the most important componetns
+		
+		@param XX a matrix of the shape [trial x channel x time]
+		@param num_components number of componetns to consider in reduction
+		"""
+		print "appling MiniBatchSparsePCA with componetns",num_components
+		print
+		nc=int(num_components)
+		RetXX=np.zeros((np.shape(XX)[0],np.shape(XX)[1],nc))
+		#RetXX=np.zeros((np.shape(XX)[0],np.shape(XX)[1],np.shape(XX)[2]))
+		for i in range(np.shape(XX)[0]):
+			S=XX[i,:,:]
+			pca = MiniBatchSparsePCA(n_components=nc)
+			S_ = pca.fit_transform(S)
+			RetXX[i,:,:]= S_
+		
+		return RetXX
+
 	def ApplyFilter(self,XX,cutoff_min,cutoff_max):
 		"""
 		Apply a frequency-filter to the time series.

@@ -35,11 +35,16 @@ class DecMeg2014Classifier:
 	
 		XX=cf.ApplyTimeWindow(XX, self._tmin, self._tmax, sfreq,tmin_original)
 		XX=cf.ApplyZnorm(XX)
+		
 		cmin=5
 		cmax=40
 		#cf.ApplyFilter(XX,cmin,cmax)
 		cf.ApplySVD(XX,nSVD)
+		#XX=cf.ApplyICA(XX,nSVD)
+		#XX=cf.ApplyRandomizedPCA(XX,nSVD)
+		#XX=cf.ApplyMiniBatchSparsePCA(XX,nSVD)
 		return cf.ReshapeToFeaturesVector(XX)
+		
 
 	def MakeTrainData(self,subjects_train,nSVD):
 		"""
