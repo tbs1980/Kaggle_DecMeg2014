@@ -10,7 +10,7 @@ class ExtractFeatures:
 		self._y_train = []
 		self._tmin = 0.0
 		self._tmax = 0.5
-		print "Restricting MEG data to the interval [%s, %s]sec." % (self._tmin, self._tmax)
+		#print "Restricting MEG data to the interval [%s, %s]sec." % (self._tmin, self._tmax)
 
 	def ApplyTimeWindow(self,XX, tmin, tmax, sfreq, tmin_original=-0.5):
 		"""
@@ -21,8 +21,8 @@ class ExtractFeatures:
 		@param tmax end point of the time window
 		@param tmin_original original start point of the time window
 		"""
-		print "Applying the desired time window."
-		print
+		#print "Applying the desired time window."
+		#print
 		beginning = np.round((tmin - tmin_original) * sfreq).astype(np.int)
 		end = np.round((tmax - tmin_original) * sfreq).astype(np.int)
 		XX = XX[:, :, beginning:end].copy()
@@ -36,8 +36,8 @@ class ExtractFeatures:
 		@param XX a matrix of the shape [trial x channel x time]
 		@param num_components number of componetns to consider in reduction
 		"""
-		print "appling svd with componetns",num_components
-		print
+		#print "appling svd with componetns",num_components
+		#print
 		
 		for i in range(np.shape(XX)[0]):
 			mat=XX[i,:,:]
@@ -58,8 +58,8 @@ class ExtractFeatures:
 		@param XX a matrix of the shape [trial x channel x time]
 		"""
 		
-		print "Features Normalization."
-		print
+		#print "Features Normalization."
+		#print
 		XX -= XX.mean(0)
 		XX = np.nan_to_num(XX / XX.std(0))
 		return XX
@@ -72,8 +72,8 @@ class ExtractFeatures:
 		@param XX a matrix of the shape [trial x channel x time]
 		"""
 		
-		print "2D Reshaping: concatenating all 306 timeseries."
-		print
+		#print "2D Reshaping: concatenating all 306 timeseries."
+		#print
 		XX = XX.reshape(XX.shape[0], XX.shape[1] * XX.shape[2])
 		return XX
 
@@ -106,20 +106,20 @@ class ExtractFeatures:
 		if max(subjects_train) > 16 :
 			raise RuntimeError("The train data ends at train_subject16.mat")
 	
-		print "Creating the trainset."
+		#print "Creating the trainset."
 		
 		for subject in subjects_train:
 			filename = self._Path2Data+'/train_subject%02d.mat' % subject
-			print "Loading", filename
+			#print "Loading", filename
 			data = loadmat(filename, squeeze_me=True)
 			XX = data['X']
 			yy = data['y']
 			sfreq = data['sfreq']
 			tmin_original = data['tmin']
-			print "Dataset summary:"
-			print "XX:", XX.shape
-			print "yy:", yy.shape
-			print "sfreq:", sfreq
+			#print "Dataset summary:"
+			#print "XX:", XX.shape
+			#print "yy:", yy.shape
+			#print "sfreq:", sfreq
 			
 			XX=self.ProcessData(XX,sfreq,tmin_original,nSVD)		
 		
@@ -128,6 +128,6 @@ class ExtractFeatures:
 			
 		self._X_train = np.vstack(self._X_train)
 		self._y_train = np.concatenate(self._y_train)
-		print "Trainset:", self._X_train.shape
+		#print "Trainset:", self._X_train.shape
 		return (self._X_train,self._y_train)
 

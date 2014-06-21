@@ -50,12 +50,12 @@ def RandomForest(x_train, y_train, x_cv, y_cv):
 	"""
 	Random Forest
 	"""
-	print "Classifier: Random Forest"
+	#print "Classifier: Random Forest"
 	clfr =  RandomForestClassifier(n_estimators = 2000, max_features=2)
 	clfr.fit(x_train, y_train)
-	print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
-	if y_cv != None:
-		print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
+	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
+	#if y_cv != None:
+	#	print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
 	
 	return clfr
 	
