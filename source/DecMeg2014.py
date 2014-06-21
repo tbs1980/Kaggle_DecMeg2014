@@ -13,7 +13,7 @@ def calibrate(path):
 	acc_cv=np.zeros(np.shape(nsvds))
 	for i in range(np.shape(nsvds)[0]):
 		print "nsvd= ",nsvds[i]
-		subjects_train=range(1,17)
+		subjects_train=range(1,3)
 		ef=ExtractFeatures.ExtractFeatures(path)
 		X,y=ef.MakeTrainData(subjects_train,nsvds[i])
 		X_tr,y_tr,X_cv,y_cv=Classify.PrepareDataSets(X,y)
