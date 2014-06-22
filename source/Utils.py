@@ -2,12 +2,12 @@ import numpy as np
 import sys
 from scipy.io import loadmat
 
-def MakeSubmissionFile(self,filename_submission):
+def MakeSubmissionFile(y_pred,ids_test,filename_submission):
 	print "Creating submission file", filename_submission
 	f = open(filename_submission, "w")
 	print >> f, "Id,Prediction"
-	for i in range(len(self._y_pred)):
-		print >> f, str(self._ids_test[i]) + "," + str(self._y_pred[i])
+	for i in range(len(y_pred)):
+		print >> f, str(ids_test[i]) + "," + str(y_pred[i])
 	f.close()
 	
 def BinomialDeviance(y, prediction):

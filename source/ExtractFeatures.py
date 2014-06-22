@@ -6,7 +6,9 @@ class ExtractFeatures:
 	def __init__(self,path_to_data=None):
 		self._Path2Data=path_to_data
 		self._X_train = []
+		self._X_test = []
 		self._y_train = []
+		self._ids_test =[]
 		self._tmin = 0.0
 		self._tmax = 0.5
 		#print "Restricting MEG data to the interval [%s, %s]sec." % (self._tmin, self._tmax)
@@ -129,4 +131,44 @@ class ExtractFeatures:
 		self._y_train = np.concatenate(self._y_train)
 		#print "Trainset:", self._X_train.shape
 		return (self._X_train,self._y_train)
+
+	def MakeTestData(self,subjects_test,nSVD):
+		"""
+		A function for creating the traing data
+		@param subjects_train A vector containing the train data numbers e.g range(1,12)
+		"""
+	
+		if self._Path2Data==None :
+			raise RuntimeError("No path to data specified")
+		
+		if min(subjects_test) < 17 :
+			raise RuntimeError("The test data starts from test_subject17.mat")
+		
+		if max(subjects_test) > 23 :
+			raise RuntimeError("The train data ends at test_subject24.mat")
+	
+		#print "Creating the testset."
+		
+		for subject in subjects_test:
+			filename = self._Path2Data+'/test_subject%02d.mat' % subject
+			#print "Loading", filename
+			data = loadmat(filename, squeeze_me=True)
+			XX = data['X']
+			sfreq = data['sfreq']
+			tmin_original = data['tmin']
+			ids = data['Id']
+			#print "Dataset summary:"
+			#print "XX:", XX.shape
+			#print "yy:", yy.shape
+			#print "sfreq:", sfreq
+			
+			XX=self.ProcessData(XX,sfreq,tmin_original,nSVD)		
+		
+			self._X_test.append(XX)
+			self._ids_test.append(ids)
+			
+		self._X_test = np.vstack(self._X_test)
+		self._ids_test = np.concatenate(self._ids_test)
+		#print "testset:", self._X_test.shape
+		return (self._X_test,self._ids_test)
 

@@ -4,6 +4,8 @@ from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import linear_model
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.svm import NuSVC
 
 def PrepareDataSets(x,y,testing_size=0.3,rand_state=0):
 	"""
@@ -63,8 +65,35 @@ def LogisticRegression(x_train, y_train, x_cv, y_cv):
 	"""
 	Logistic Regression
 	"""
-	#print "Classifier: Logistic Regressiont"
+	#print "Classifier: Logistic Regression"
 	clfr = linear_model.LogisticRegression(penalty='l2', C=.03)
+	#clfr = linear_model.LogisticRegression()
+	clfr.fit(x_train, y_train)
+	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
+	#if y_cv != None:
+		#print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
+	
+	return clfr
+	
+def SupportVectorMachine(x_train, y_train, x_cv, y_cv):
+	"""
+	Support Vector Machine
+	"""
+	#print "Classifier: Support Vector Machine"
+	clfr = SVC(probability=True)
+	clfr.fit(x_train, y_train)
+	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
+	#if y_cv != None:
+		#print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
+	
+	return clfr
+
+def NonLinearSupportVectorMachine(x_train, y_train, x_cv, y_cv):
+	"""
+	Non Linear Support Vector Machine
+	"""
+	#print "Classifier: Support Vector Machine"
+	clfr = NuSVC(probability=True)
 	clfr.fit(x_train, y_train)
 	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
 	#if y_cv != None:
