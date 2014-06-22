@@ -17,33 +17,33 @@ def KNearestNeighbors(x_train, y_train, x_cv, y_cv, k=3):
 	"""
 	K Nearest Neighbors
 	"""
-	print "Classifier: K Nearest Neighbors"
+	#print "Classifier: K Nearest Neighbors"
 	clfr = KNeighborsClassifier(n_neighbors=k)
 	clfr.fit(x_train, y_train)
-	print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
-	print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
+	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
+	#print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
 	return clfr
 	
 def BernoulliNaiveBayes(x_train, y_train, x_cv, y_cv):
 	"""
 	Bernoulli Naive Bayes
 	"""
-	print "Classifier: Bernoulli Naive Bayes"
+	#print "Classifier: Bernoulli Naive Bayes"
 	clfr = BernoulliNB()
 	clfr.fit(x_train, y_train)
-	print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
-	print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
+	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
+	#print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
 	return clfr
 	
 def NaiveBayes(x_train, y_train, x_cv, y_cv):
 	"""
 	Naive Bayes
 	"""
-	print "Classifier: Naive Bayes"
+	#print "Classifier: Naive Bayes"
 	clfr = MultinomialNB()
 	clfr.fit(x_train, y_train)
-	print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
-	print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
+	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
+	#print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
 	return clfr
 
 def RandomForest(x_train, y_train, x_cv, y_cv):
@@ -63,12 +63,12 @@ def LogisticRegression(x_train, y_train, x_cv, y_cv):
 	"""
 	Logistic Regression
 	"""
-	print "Classifier: Logistic Regressiont"
+	#print "Classifier: Logistic Regressiont"
 	clfr = linear_model.LogisticRegression(penalty='l2', C=.03)
 	clfr.fit(x_train, y_train)
-	print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
-	if y_cv != None:
-		print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
+	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
+	#if y_cv != None:
+		#print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
 	
 	return clfr
 	

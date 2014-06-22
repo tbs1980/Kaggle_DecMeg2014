@@ -6,18 +6,24 @@ import Utils
 import numpy as np
 
 def calibrate(path):
-	nsvds=np.arange(10,100,5)
+	#nsvds=np.arange(10,100,5)
+	nsvds=np.arange(10,25,5)
 	bd_tr=np.zeros(np.shape(nsvds))
 	bd_cv=np.zeros(np.shape(nsvds))
 	acc_tr=np.zeros(np.shape(nsvds))
 	acc_cv=np.zeros(np.shape(nsvds))
 	for i in range(np.shape(nsvds)[0]):
 		print "nsvd= ",nsvds[i]
+		#subjects_train=range(1,17)
 		subjects_train=range(1,3)
 		ef=ExtractFeatures.ExtractFeatures(path)
 		X,y=ef.MakeTrainData(subjects_train,nsvds[i])
 		X_tr,y_tr,X_cv,y_cv=Classify.PrepareDataSets(X,y)
-		clfr = Classify.RandomForest(X_tr, y_tr, X_cv, y_cv)
+		#clfr = Classify.RandomForest(X_tr, y_tr, X_cv, y_cv)
+		#clfr = Classify.LogisticRegression(X_tr, y_tr, X_cv, y_cv)
+		#clfr = Classify.BernoulliNaiveBayes(X_tr, y_tr, X_cv, y_cv)
+		#clfr = Classify.NaiveBayes(X_tr, y_tr, X_cv, y_cv)#does not work. throws an error saying negative values X
+		clfr = Classify.KNearestNeighbors(X_tr, y_tr, X_cv, y_cv)
 		bd_tr[i]=Utils.BinomialDeviance(y_tr,Classify.ComputeProbability(clfr, X_tr))
 		bd_cv[i]=Utils.BinomialDeviance(y_cv,Classify.ComputeProbability(clfr, X_cv))
 		acc_tr[i]=clfr.score(X_tr, y_tr)
