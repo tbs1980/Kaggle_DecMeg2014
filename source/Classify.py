@@ -7,7 +7,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.svm import NuSVC
 
-def PrepareDataSets(x,y,testing_size=0.3,rand_state=0):
+def PrepareDataSets(x,y,testing_size=0.5,rand_state=0):
 	"""
 	Split the data into train and cross-validation sets.
 	"""

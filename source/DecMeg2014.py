@@ -6,7 +6,7 @@ import Utils
 import numpy as np
 
 def calibrate(path):
-	nsvds=np.arange(10,125,5)
+	nsvds=np.arange(10,125,25)
 	#nsvds=np.arange(10,25,5)
 	bd_tr=np.zeros(np.shape(nsvds))
 	bd_cv=np.zeros(np.shape(nsvds))

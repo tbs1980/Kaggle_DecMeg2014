@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.io import loadmat
+from sklearn.decomposition import FastICA
+from sklearn.decomposition import MiniBatchSparsePCA
 
 class ExtractFeatures:
 
@@ -51,7 +53,30 @@ class ExtractFeatures:
 			snew[0:int(num_components)]=s[0:int(num_components)]
 			S=np.diag(snew)
 			XX[i,:,:]=np.dot(u,np.dot(S,v))
-
+		
+		return XX
+			
+	def ApplyICA(self,XX,num_components):
+		"""
+		Apply ICA to each trial and take the most important componetns
+		
+		@param XX a matrix of the shape [trial x channel x time]
+		@param num_components number of componetns to consider in reduction
+		"""
+		#print "appling ICA with componetns",num_components
+		#print
+		nc=int(num_components)
+		RetXX=np.zeros((np.shape(XX)[0],np.shape(XX)[1],nc))
+		#RetXX=np.zeros((np.shape(XX)[0],np.shape(XX)[1],np.shape(XX)[2]))
+		for i in range(np.shape(XX)[0]):
+			#print "trial ",i
+			S=XX[i,:,:]
+			#S /= S.std(axis=0)
+			ica = FastICA(n_components=nc,algorithm='deflation')
+			S_ = ica.fit_transform(S)
+			RetXX[i,:,:]= S_
+		
+		return RetXX
 
 	def ApplyZnorm(self,XX):
 		"""
@@ -88,7 +113,8 @@ class ExtractFeatures:
 		XX=self.ApplyTimeWindow(XX, self._tmin, self._tmax, sfreq,tmin_original)
 		XX=self.ApplyZnorm(XX)
 		
-		self.ApplySVD(XX,nSVD)
+		#XX=self.ApplySVD(XX,nSVD)
+		XX=self.ApplyICA(XX,nSVD)
 		return self.ReshapeToFeaturesVector(XX)
 		
 
