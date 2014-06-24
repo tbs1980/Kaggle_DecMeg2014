@@ -65,7 +65,7 @@ def LogisticRegression(x_train, y_train, x_cv, y_cv):
 	"""
 	Logistic Regression
 	"""
-	#print "Classifier: Logistic Regression"
+	print "Classifier: Logistic Regression"
 	clfr = linear_model.LogisticRegression(penalty='l2', C=.03)
 	#clfr = linear_model.LogisticRegression()
 	clfr.fit(x_train, y_train)

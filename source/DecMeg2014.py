@@ -3,6 +3,7 @@ import sys
 import ExtractFeatures
 import Classify
 import Utils
+import StackedGeneralisation
 import numpy as np
 
 def calibrate(path):
@@ -72,8 +73,11 @@ if __name__ == '__main__':
 		path=sys.argv[1]
 		subfile=sys.argv[2]
 		
-		clfr,svdopt=calibrate(path)
-		classify_test_data(path,clfr,svdopt,subfile)
+		#clfr,svdopt=calibrate(path)
+		#classify_test_data(path,clfr,svdopt,subfile)
+		sg=StackedGeneralisation.StackedGeneralisation(path)
+		sg.CreateFistLayer()
+		sg.CreateSecondLayer();
 		
 		print (time.time() - start_time) / 60.0, 'minutes'
 	else:
