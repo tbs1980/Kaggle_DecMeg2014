@@ -3,12 +3,14 @@ import numpy as np
 import Classify
 import sys
 from scipy.io import loadmat
+from sklearn.svm import SVC
+from sklearn.svm import NuSVC
 
 class StackedGeneralisation:
 	def __init__(self,path_to_data):
 		self._Path2Data=path_to_data
 		self._subjects_train=range(1,5)
-		self._subjects_train_testing=range(5,7)
+		self._subjects_train_testing=range(10,12)
 		self._subjects_test=range(17,24)
 		self._tmin = 0.0
 		self._tmax = 0.5
@@ -24,6 +26,10 @@ class StackedGeneralisation:
 		self._data_y_testing=[]
 		self._data_layer_1_X_testing=[]
 		self._data_layer_1_y_testing=[]
+		
+		self._class_weights_layer1=[]
+		self._class_weights=[]
+		
 
 	def ApplyTimeWindow(self,XX, tmin, tmax, sfreq, tmin_original=-0.5):
 		"""
@@ -100,31 +106,59 @@ class StackedGeneralisation:
 			print "shape of X and y are ",np.shape(X),np.shape(y)
 			clfr = Classify.LogisticRegression(X, y,None, None)
 			self._first_layer_classifiers.append(clfr)
-		
-		self._data_layer_1_y=np.concatenate(self._data_layer_1_y)
-		print "shape of data class labels= ",np.shape(self._data_layer_1_y)
 			
 		print "toal classifiers =",len(self._first_layer_classifiers),len(self._data_X),len(self._data_y)
+
+		#check the scores
+		#for i in range(len(self._first_layer_classifiers)):
+			#ypred=self._first_layer_classifiers[i].predict(self._data_X[i])
+			#print "error for classifer " ,i,"=", float(sum(abs(ypred-self._data_y[i])))/float(len(self._data_y[i]))*100,"%"
+			#print "score for classifer on its data= ",self._first_layer_classifiers[i].score(self._data_X[i],self._data_y[i])
+		
+		#return 
+		
+		#make all the predictions into one vector
+		self._data_layer_1_y=np.concatenate(self._data_layer_1_y)
+		print "shape of data class labels= ",np.shape(self._data_layer_1_y)
+	
 		
 		#now create first layer of predictions
 		for i in range(len(self._subjects_train)):
-			print "i= ",i
+			#print "i= ",i
 			ypred_1=[]
+			cls_wt_clf=[]
 			for j in range(len(self._subjects_train)):
-				print "j= ",j
 				ypred=self._first_layer_classifiers[i].predict(self._data_X[j])
+				print "error of classifer " ,i,"for data ",j,"=", float(sum(abs(ypred-self._data_y[j])))/float(len(self._data_y[j]))*100,"%"
 				ypred_1.append(ypred)
+				#create some weights
+				cls_wt=np.ones(np.shape(ypred))
+				cls_wt[ypred==self._data_y[j]]+=1.#double weights for the correct ones
+				#print "toal number that are good= ",sum(cls_wt)
+				cls_wt_clf.append(cls_wt)
 			
+			#concatenate all the predictions into a feature vector
 			ypred_1 = np.concatenate(ypred_1)
-			print "length of ypred_1= ",len(ypred_1),np.shape(ypred_1)
+			cls_wt_clf = np.concatenate(cls_wt_clf)
+			#print "length of ypred_1= ",len(ypred_1),np.shape(ypred_1)
+			#print "length of class weights= ",len(cls_wt_clf),np.shape(cls_wt_clf)
 			self._data_layer_1_X.append(ypred_1)
-			
+			self._class_weights_layer1.append(cls_wt_clf)
+		
 		self._data_layer_1_X=np.vstack(self._data_layer_1_X).T
+		self._class_weights_layer1 = np.vstack(self._class_weights_layer1).T
 		print "shape of layer 1 X=",np.shape(self._data_layer_1_X)
+		print "shape of layer 1 class_weights=",np.shape(self._class_weights_layer1)
+		
 		
 		#now the second layer
+		print
 		print "creating the second layer"
+		print 
+		
 		self._clfr2=Classify.LogisticRegression(self._data_layer_1_X, self._data_layer_1_y,None, None)
+		
+				
 		
 	def CreateSecondLayer(self):
 		for subject in self._subjects_train_testing:
@@ -144,10 +178,10 @@ class StackedGeneralisation:
 		
 		#now create first layer of predictions
 		for i in range(len(self._subjects_train)):#since we have subjects_train number of features here
-			print "i= ",i
+			#print "i= ",i
 			ypred_1=[]
 			for j in range(len(self._subjects_train_testing)):
-				print "j= ",j
+				#print "j= ",j
 				ypred=self._first_layer_classifiers[i].predict(self._data_X_testing[j])
 				ypred_1.append(ypred)
 			
@@ -158,16 +192,9 @@ class StackedGeneralisation:
 		self._data_layer_1_X_testing=np.vstack(self._data_layer_1_X_testing).T
 		print "shape of layer 1 X testing=",np.shape(self._data_layer_1_X_testing)
 		
-		ypred_test=self._clfr2.predict(self._data_layer_1_X_testing)
 		
-		print "id        prediction      truth"
-		for i in range(len(ypred_test)):
-			print i, ypred_test[i],self._data_layer_1_y_testing[i]
-			
-		print "accuracy= " , float(sum(abs(ypred_test-self._data_layer_1_y_testing)))/float(len(self._data_layer_1_y_testing))
-		
-		
-		
+		ypred_test = self._clfr2.predict(self._data_layer_1_X_testing)
+		print "error for 2nd classifer =", float(sum(abs(ypred_test-self._data_layer_1_y_testing)))/float(len(self._data_layer_1_y_testing))*100,"%"
 		
 					
 			
