@@ -48,13 +48,16 @@ def NaiveBayes(x_train, y_train, x_cv, y_cv):
 	#print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
 	return clfr
 
-def RandomForest(x_train, y_train, x_cv, y_cv):
+def RandomForest(x_train, y_train, x_cv, y_cv,sw=None):
 	"""
 	Random Forest
 	"""
 	#print "Classifier: Random Forest"
-	clfr =  RandomForestClassifier(n_estimators = 2000, max_features=2)
-	clfr.fit(x_train, y_train)
+	clfr =  RandomForestClassifier(n_estimators = 50, max_features="log2")
+	if sw != None:
+		clfr.fit(x_train, y_train,sample_weight=sw)
+	else:
+		clfr.fit(x_train, y_train)
 	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
 	#if y_cv != None:
 	#	print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
@@ -75,13 +78,16 @@ def LogisticRegression(x_train, y_train, x_cv, y_cv):
 	
 	return clfr
 	
-def SupportVectorMachine(x_train, y_train, x_cv, y_cv):
+def SupportVectorMachine(x_train, y_train, x_cv, y_cv,sw):
 	"""
 	Support Vector Machine
 	"""
 	#print "Classifier: Support Vector Machine"
 	clfr = SVC(probability=True)
-	clfr.fit(x_train, y_train)
+	if sw != None:
+		clfr.fit(x_train, y_train,sample_weight=sw)
+	else:
+		clfr.fit(x_train, y_train)
 	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
 	#if y_cv != None:
 		#print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
@@ -94,6 +100,20 @@ def NonLinearSupportVectorMachine(x_train, y_train, x_cv, y_cv):
 	"""
 	#print "Classifier: Support Vector Machine"
 	clfr = NuSVC(probability=True)
+	clfr.fit(x_train, y_train)
+	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
+	#if y_cv != None:
+		#print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
+	
+	return clfr
+	
+	
+def SGDClassifier(x_train, y_train, x_cv, y_cv):
+	"""
+	SGD-Classifier
+	"""
+	#print "Classifier: Support Vector Machine"
+	clfr = linear_model.SGDClassifier(loss="log",penalty="l1",alpha=0.03)
 	clfr.fit(x_train, y_train)
 	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
 	#if y_cv != None:

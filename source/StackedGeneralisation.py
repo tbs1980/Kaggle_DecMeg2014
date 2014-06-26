@@ -1,21 +1,21 @@
 # method described in http://arxiv.org/abs/1404.4175
 import numpy as np
 import Classify
+import Utils
 import sys
 from scipy.io import loadmat
-from sklearn.svm import SVC
-from sklearn.svm import NuSVC
+from sklearn.cross_validation import cross_val_score
+from sklearn.linear_model import LogisticRegression
 
 class StackedGeneralisation:
 	def __init__(self,path_to_data):
 		self._Path2Data=path_to_data
-		self._subjects_train=range(1,5)
-		self._subjects_train_testing=range(10,12)
+		self._subjects_train=range(1,17)
+		self._subjects_train_testing=range(15,17)
 		self._subjects_test=range(17,24)
 		self._tmin = 0.0
 		self._tmax = 0.5
 		self._first_layer_classifiers=[]
-		self._second_layer_classifiers=[]
 		self._data_X=[]
 		self._data_y=[]
 		self._data_layer_1_X=[]
@@ -27,10 +27,17 @@ class StackedGeneralisation:
 		self._data_layer_1_X_testing=[]
 		self._data_layer_1_y_testing=[]
 		
-		self._class_weights_layer1=[]
-		self._class_weights=[]
+		self._sample_weights=[]
 		
-
+		self._ids_test=[]
+		self._ypred_test=[]
+		
+		self._acc_thr=0.2
+		
+		self._sensor_scores=[]
+		
+		self._top_channels=[]
+		
 	def ApplyTimeWindow(self,XX, tmin, tmax, sfreq, tmin_original=-0.5):
 		"""
 		A function to apply the desired time window.
@@ -47,6 +54,22 @@ class StackedGeneralisation:
 		XX = XX[:, :, beginning:end].copy()
 		
 		return XX
+		
+	def ComputeScores(self,X,y):
+		print "Computing cross-validated accuracy for each channel."
+		clf = LogisticRegression(random_state=0)
+		score_channel = np.zeros(X.shape[1])
+		cv=5
+		for channel in range(X.shape[1]):
+			X_channel = X[:,channel,:].copy()
+			#X_channel -= X_channel.mean(0)
+			#X_channel = np.nan_to_num(X_channel / X_channel.std(0))
+			scores = cross_val_score(clf, X_channel, y, cv=cv, scoring='accuracy')
+			score_channel[channel] = scores.mean()
+			#print "Channel :" ,channel," score: ",score_channel[channel]
+			
+		
+		return score_channel
 
 	def ApplyZnorm(self,XX):
 		"""
@@ -73,7 +96,7 @@ class StackedGeneralisation:
 		XX = XX.reshape(XX.shape[0], XX.shape[1] * XX.shape[2])
 		return XX
 
-	def ProcessData(self,XX,sfreq,tmin_original,nSVD):
+	def ProcessData(self,XX,sfreq,tmin_original):
 		"""
 		Process data 
 		@param XX a matrix of the shape [trial x channel x time]
@@ -82,8 +105,10 @@ class StackedGeneralisation:
 		"""
 		XX=self.ApplyTimeWindow(XX, self._tmin, self._tmax, sfreq,tmin_original)
 		XX=self.ApplyZnorm(XX)
-		
-		return self.ReshapeToFeaturesVector(XX)
+		#now take only the good top channels
+		#XXtop=XX[:,self._top_channels[:],:]
+		XXtop=XX[:,self._top_channels[0:200],:]
+		return self.ReshapeToFeaturesVector(XXtop)
 		
 	def GetTrainData(self,filename):
 		print "Loading", filename
@@ -92,9 +117,45 @@ class StackedGeneralisation:
 		yy = data['y']
 		sfreq = data['sfreq']
 		tmin_original = data['tmin']
-		XX=self.ProcessData(XX,sfreq,tmin_original,0)		
+		XX=self.ProcessData(XX,sfreq,tmin_original)		
 		
 		return (XX,yy)
+
+	def GetTestData(self,filename):
+		print "Loading", filename
+		data = loadmat(filename, squeeze_me=True)
+		XX = data['X']
+		ids = data['Id']
+		sfreq = data['sfreq']
+		tmin_original = data['tmin']
+		XX=self.ProcessData(XX,sfreq,tmin_original)		
+		
+		return (XX,ids)
+		
+	def FindTheBestChannels(self):
+		for subject in self._subjects_train:
+			filename = self._Path2Data+'/train_subject%02d.mat' % subject
+			data = loadmat(filename, squeeze_me=True)
+			XX = data['X']
+			yy = data['y']
+			sfreq = data['sfreq']
+			tmin_original = data['tmin']
+			XX=self.ApplyTimeWindow(XX, self._tmin, self._tmax, sfreq,tmin_original)
+			XX=self.ApplyZnorm(XX)
+			scr=self.ComputeScores(XX,yy)
+			#print scr
+			self._sensor_scores.append(scr)
+			
+		print "shape of secore= ",np.shape(self._sensor_scores)
+		self._sensor_scores=np.vstack(self._sensor_scores)
+		
+		scr_means=np.zeros(np.shape(self._sensor_scores)[1])
+		for i in range(np.shape(self._sensor_scores)[1]):
+			scr_means[i]=np.mean(self._sensor_scores[:,i])
+			
+		self._top_channels=np.argsort(scr_means)
+		
+		
 
 	def CreateFistLayer(self):
 		for subject in self._subjects_train:
@@ -103,63 +164,34 @@ class StackedGeneralisation:
 			self._data_layer_1_y.append(y)
 			self._data_X.append(X)
 			self._data_y.append(y)
-			print "shape of X and y are ",np.shape(X),np.shape(y)
 			clfr = Classify.LogisticRegression(X, y,None, None)
 			self._first_layer_classifiers.append(clfr)
 			
-		print "toal classifiers =",len(self._first_layer_classifiers),len(self._data_X),len(self._data_y)
-
-		#check the scores
-		#for i in range(len(self._first_layer_classifiers)):
-			#ypred=self._first_layer_classifiers[i].predict(self._data_X[i])
-			#print "error for classifer " ,i,"=", float(sum(abs(ypred-self._data_y[i])))/float(len(self._data_y[i]))*100,"%"
-			#print "score for classifer on its data= ",self._first_layer_classifiers[i].score(self._data_X[i],self._data_y[i])
-		
-		#return 
-		
 		#make all the predictions into one vector
 		self._data_layer_1_y=np.concatenate(self._data_layer_1_y)
-		print "shape of data class labels= ",np.shape(self._data_layer_1_y)
-	
 		
 		#now create first layer of predictions
 		for i in range(len(self._subjects_train)):
-			#print "i= ",i
 			ypred_1=[]
 			cls_wt_clf=[]
 			for j in range(len(self._subjects_train)):
 				ypred=self._first_layer_classifiers[i].predict(self._data_X[j])
 				print "error of classifer " ,i,"for data ",j,"=", float(sum(abs(ypred-self._data_y[j])))/float(len(self._data_y[j]))*100,"%"
 				ypred_1.append(ypred)
-				#create some weights
-				cls_wt=np.ones(np.shape(ypred))
-				cls_wt[ypred==self._data_y[j]]+=1.#double weights for the correct ones
-				#print "toal number that are good= ",sum(cls_wt)
-				cls_wt_clf.append(cls_wt)
 			
 			#concatenate all the predictions into a feature vector
 			ypred_1 = np.concatenate(ypred_1)
-			cls_wt_clf = np.concatenate(cls_wt_clf)
-			#print "length of ypred_1= ",len(ypred_1),np.shape(ypred_1)
-			#print "length of class weights= ",len(cls_wt_clf),np.shape(cls_wt_clf)
 			self._data_layer_1_X.append(ypred_1)
-			self._class_weights_layer1.append(cls_wt_clf)
 		
 		self._data_layer_1_X=np.vstack(self._data_layer_1_X).T
-		self._class_weights_layer1 = np.vstack(self._class_weights_layer1).T
-		print "shape of layer 1 X=",np.shape(self._data_layer_1_X)
-		print "shape of layer 1 class_weights=",np.shape(self._class_weights_layer1)
-		
-		
+
 		#now the second layer
 		print
 		print "creating the second layer"
 		print 
 		
 		self._clfr2=Classify.LogisticRegression(self._data_layer_1_X, self._data_layer_1_y,None, None)
-		
-				
-		
+
 	def CreateSecondLayer(self):
 		for subject in self._subjects_train_testing:
 			filename = self._Path2Data+'/train_subject%02d.mat' % subject
@@ -167,34 +199,50 @@ class StackedGeneralisation:
 			self._data_layer_1_y_testing.append(y)
 			self._data_X_testing.append(X)
 			self._data_y_testing.append(y)
-			print "shape of X and y are ",np.shape(X),np.shape(y)
-			#clfr = Classify.LogisticRegression(X, y,None, None)
-			#self._first_layer_classifiers.append(clfr)
-		
+
 		self._data_layer_1_y_testing=np.concatenate(self._data_layer_1_y_testing)
-		print "shape of data class labels= ",np.shape(self._data_layer_1_y_testing)
-			
-		print "shape of data_X_testing and data_y_testing=",len(self._data_X_testing),len(self._data_y_testing)
 		
 		#now create first layer of predictions
 		for i in range(len(self._subjects_train)):#since we have subjects_train number of features here
-			#print "i= ",i
 			ypred_1=[]
 			for j in range(len(self._subjects_train_testing)):
-				#print "j= ",j
 				ypred=self._first_layer_classifiers[i].predict(self._data_X_testing[j])
 				ypred_1.append(ypred)
 			
 			ypred_1 = np.concatenate(ypred_1)
-			print "length of ypred_1 testing= ",len(ypred_1),np.shape(ypred_1)
 			self._data_layer_1_X_testing.append(ypred_1)
 			
 		self._data_layer_1_X_testing=np.vstack(self._data_layer_1_X_testing).T
-		print "shape of layer 1 X testing=",np.shape(self._data_layer_1_X_testing)
-		
 		
 		ypred_test = self._clfr2.predict(self._data_layer_1_X_testing)
 		print "error for 2nd classifer =", float(sum(abs(ypred_test-self._data_layer_1_y_testing)))/float(len(self._data_layer_1_y_testing))*100,"%"
 		
+
+	def PredictTestData(self):
+		print "prediction"
+		for subject in self._subjects_test:
+			filename = self._Path2Data+'/test_subject%02d.mat' % subject
+			X,ids=self.GetTestData(filename)
+			self._data_X_testing.append(X)
+			self._ids_test.append(ids)
+		
+		self._ids_test = np.concatenate(self._ids_test)
+		
+		#now create first layer of predictions
+		for i in range(len(self._subjects_train)):#since we have subjects_train number of features here
+			ypred_1=[]
+			for j in range(len(self._subjects_test)):
+				ypred=self._first_layer_classifiers[i].predict(self._data_X_testing[j])
+				ypred_1.append(ypred)
+			
+			ypred_1 = np.concatenate(ypred_1)
+			self._data_layer_1_X_testing.append(ypred_1)
+			
+		self._data_layer_1_X_testing=np.vstack(self._data_layer_1_X_testing).T
+		
+		
+		self._ypred_test = self._clfr2.predict(self._data_layer_1_X_testing)
+		
+		return (self._ypred_test,self._ids_test)
 					
 			
