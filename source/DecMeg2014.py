@@ -4,6 +4,8 @@ import ExtractFeatures
 import Classify
 import Utils
 import StackedGeneralisation
+import StkGenSpectra
+import StackedGeneralisationKclfr
 import numpy as np
 
 def calibrate(path):
@@ -75,12 +77,25 @@ if __name__ == '__main__':
 		
 		#clfr,svdopt=calibrate(path)
 		#classify_test_data(path,clfr,svdopt,subfile)
-		sg=StackedGeneralisation.StackedGeneralisation(path)
-		sg.FindTheBestChannels()
-		sg.CreateFistLayer()
+		
+		
+		
+		#sg.FindTheBestChannels()
+		
+		#sg=StackedGeneralisation.StackedGeneralisation(path)		
+		#sg.CreateFistLayer()
 		#sg.CreateSecondLayer();
-		y_pred,ids_test=sg.PredictTestData()
-		Utils.MakeSubmissionFile(y_pred,ids_test,subfile)
+		
+		#y_pred,ids_test=sg.PredictTestData()
+		#Utils.MakeSubmissionFile(y_pred,ids_test,subfile)
+		
+		#sgh=StkGenSpectra.StackedGeneralisationWithHarmonicCoeffs(path)
+		#sgh.CreateFistLayer()
+		#sgh.CreateSecondLayer()
+		
+		sgKc=StackedGeneralisationKclfr.StackedGeneralisationKclfr(path)
+		sgKc.CreateFistLayer()
+		sgKc.TestSeconLayer()
 		
 		print (time.time() - start_time) / 60.0, 'minutes'
 	else:
