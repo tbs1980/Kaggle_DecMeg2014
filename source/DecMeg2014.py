@@ -82,20 +82,22 @@ if __name__ == '__main__':
 		
 		#sg.FindTheBestChannels()
 		
-		#sg=StackedGeneralisation.StackedGeneralisation(path)		
-		#sg.CreateFistLayer()
-		#sg.CreateSecondLayer();
-		
+		sg=StackedGeneralisation.StackedGeneralisation(path)		
+		sg.CreateFistLayer()
+		sg.TestSeconLayer();		
 		#y_pred,ids_test=sg.PredictTestData()
-		#Utils.MakeSubmissionFile(y_pred,ids_test,subfile)
 		
 		#sgh=StkGenSpectra.StackedGeneralisationWithHarmonicCoeffs(path)
 		#sgh.CreateFistLayer()
 		#sgh.CreateSecondLayer()
 		
-		sgKc=StackedGeneralisationKclfr.StackedGeneralisationKclfr(path)
-		sgKc.CreateFistLayer()
-		sgKc.TestSeconLayer()
+		#sgKc=StackedGeneralisationKclfr.StackedGeneralisationKclfr(path)
+		#sgKc.CreateFistLayer()
+		#sgKc.TestSeconLayer()
+		#y_pred,ids_test=sgKc.PredictTestData()
+		
+		
+		#Utils.MakeSubmissionFile(y_pred,ids_test,subfile)
 		
 		print (time.time() - start_time) / 60.0, 'minutes'
 	else:

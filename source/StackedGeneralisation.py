@@ -1,17 +1,20 @@
 # method described in http://arxiv.org/abs/1404.4175
 import numpy as np
 import Classify
+import RBMPipeline
 import Utils
 import sys
 from scipy.io import loadmat
 from sklearn.cross_validation import cross_val_score
 from sklearn.linear_model import LogisticRegression
+import pywt
+from statsmodels.robust import stand_mad
 
 class StackedGeneralisation:
 	def __init__(self,path_to_data):
 		self._Path2Data=path_to_data
-		self._subjects_train=range(1,2)
-		self._subjects_train_testing=range(15,17)
+		self._subjects_train=range(1,13)
+		self._subjects_train_testing=range(12,17)
 		self._subjects_test=range(17,24)
 		self._tmin = 0.0
 		self._tmax = 0.5
@@ -51,7 +54,10 @@ class StackedGeneralisation:
 		#print
 		beginning = np.round((tmin - tmin_original) * sfreq).astype(np.int)
 		end = np.round((tmax - tmin_original) * sfreq).astype(np.int)
-		XX = XX[:, :, beginning:end].copy()
+		XX = XX[:, :, beginning:300].copy()
+		
+		#if np.shape(XX)[2] != 128 :
+			#raise ValueError("the time series should have 128 elements")
 		
 		return XX
 		
@@ -83,6 +89,56 @@ class StackedGeneralisation:
 		XX = np.nan_to_num(XX / XX.std(0))
 		return XX
 	
+	def ApplySVD(self,XX,num_components):
+		"""
+		Apply SVD to each trial and take the most important componetns
+		
+		@param XX a matrix of the shape [trial x channel x time]
+		@param num_components number of componetns to consider in reduction
+		"""
+		#print "appling svd with componetns",num_components
+		#print
+		
+		for i in range(np.shape(XX)[0]):
+			mat=XX[i,:,:]
+			u,s,v=np.linalg.svd(mat,full_matrices=False)
+			snew=np.zeros(np.shape(s))
+			if int(num_components) > snew.size-1 or num_components < 0:
+				print "input num_components ",num_components
+				print "changin to ",snew.size-1
+				num_components=snew.size-1				
+			snew[0:int(num_components)]=s[0:int(num_components)]
+			S=np.diag(snew)
+			XX[i,:,:]=np.dot(u,np.dot(S,v))
+		
+		return XX
+		
+	def ApplyWaveletTransform(self,XX):
+		XXret = np.zeros( [np.shape(XX)[0],np.shape(XX)[1],188] )
+		for i in range(np.shape(XX)[0]):
+			for j in range(np.shape(XX)[1]):
+				#print "before ",np.mean(XX[i,j,0:128])
+				sig = XX[i,j,:]
+				wcfs = pywt.wavedec(sig,wavelet='db2')
+				#if i==0 and j==0 :
+					#print "shape of wcfs= ",np.shape(wcfs)
+					
+				#wcfs[0] = np.zeros(np.shape(wcfs[0]))
+				wcfs = np.concatenate(wcfs)
+				XXret[i,j,:] = wcfs
+				
+				#sigma = stand_mad(wcfs[-1])
+				#uthresh = sigma*np.sqrt(2*np.log(len(sig)))
+				#dewcfs = wcfs[:]
+				#dewcfs[1:] = (pywt.thresholding.soft(k, value=uthresh) for k in dewcfs[1:])
+				#dewcfs = np.concatenate(dewcfs)
+				#XXret[i,j,:] = dewcfs
+				#print "after ",np.mean(XX[i,j,0:128])
+				
+		return XXret
+		
+
+
 	def ReshapeToFeaturesVector(self,XX):
 		"""
 		Reshape the matrix to a set of features by concatenating 
@@ -104,7 +160,9 @@ class StackedGeneralisation:
 		@param tmin_original Original start point of the window.
 		"""
 		XX=self.ApplyTimeWindow(XX, self._tmin, self._tmax, sfreq,tmin_original)
+		#XX=self.ApplySVD(XX,100)
 		XX=self.ApplyZnorm(XX)
+		#XX = self.ApplyWaveletTransform(XX)
 		return self.ReshapeToFeaturesVector(XX)
 		#now take only the good top channels
 		#XXtop=XX[:,self._top_channels[:],:]
@@ -166,10 +224,13 @@ class StackedGeneralisation:
 			self._data_X.append(X)
 			self._data_y.append(y)
 			clfr = Classify.LogisticRegression(X, y,None, None)
+			#clfr = RBMPipeline.LogRegWithRBMFeatures(X, y,None, None)
 			self._first_layer_classifiers.append(clfr)
 			
 		#make all the predictions into one vector
 		self._data_layer_1_y=np.concatenate(self._data_layer_1_y)
+		
+		#return 
 		
 		#now create first layer of predictions
 		for i in range(len(self._subjects_train)):
@@ -193,8 +254,9 @@ class StackedGeneralisation:
 		
 		print "shape =",np.shape(self._data_layer_1_X),np.shape(self._data_layer_1_y)
 		self._clfr2=Classify.LogisticRegression(self._data_layer_1_X, self._data_layer_1_y,None, None)
+		#self._clfr2=RBMPipeline.LogRegWithRBMFeatures(self._data_layer_1_X, self._data_layer_1_y,None, None)
 
-	def CreateSecondLayer(self):
+	def TestSeconLayer(self):
 		for subject in self._subjects_train_testing:
 			filename = self._Path2Data+'/train_subject%02d.mat' % subject
 			X,y=self.GetTrainData(filename)

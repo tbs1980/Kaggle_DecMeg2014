@@ -1,6 +1,7 @@
 # method described in http://arxiv.org/abs/1404.4175
 import numpy as np
 import Classify
+import RBMPipeline
 import Utils
 import sys
 from scipy.io import loadmat
@@ -9,15 +10,15 @@ from sklearn.linear_model import LogisticRegression
 
 class StackedGeneralisationKclfr:
 	def __init__(self,path_to_data):
-		#self._K=8
 		self._Path2Data=path_to_data
-		#self._subjects_train=range(self._K,5)
-		#self._subjects_train_class=range(1,self._K)
+		self._K=8
+		self._subjects_train_class=range(1,self._K)
+		self._subjects_train=range(self._K,17)
 		
-		self._subjects_train_class=range(1,8)
-		self._subjects_train=range(13,15)
+		#self._subjects_train_class=range(1,4)
+		#self._subjects_train=range(9,12)
 		
-		self._subjects_train_testing=range(15,17)
+		self._subjects_train_testing=range(12,17)
 		self._subjects_test=range(17,24)
 		self._tmin = 0.0
 		self._tmax = 0.5
@@ -145,10 +146,6 @@ class StackedGeneralisationKclfr:
 			ypred_1=[]
 			print ""
 			for j in range(len(self._subjects_train)):
-				#subject=self._subjects_train[j]
-				#filename = self._Path2Data+'/train_subject%02d.mat' % subject
-				#X,y=self.GetTrainData(filename)
-				#ypred=y
 				ypred=self._first_layer_classifiers[i].predict(self._data_X[j])
 				print "error of classifer " ,self._subjects_train_class[i],"for data ",self._subjects_train[j],"=", float(sum(abs(ypred-self._data_y[j])))/float(len(self._data_y[j]))*100,"%"
 				ypred_1.append(ypred)
@@ -186,10 +183,6 @@ class StackedGeneralisationKclfr:
 			#print "\n classifer ",i
 			ypred_1=[]
 			for j in range(len(self._subjects_train_testing)):
-				#subject=self._subjects_train_testing[j]
-				#filename = self._Path2Data+'/train_subject%02d.mat' % subject
-				#X,y=self.GetTrainData(filename)
-				#ypred=y
 				ypred=self._first_layer_classifiers[i].predict(self._data_X_testing[j])					
 				ypred_1.append(ypred)
 			
@@ -215,7 +208,7 @@ class StackedGeneralisationKclfr:
 		self._ids_test = np.concatenate(self._ids_test)
 		
 		#now create first layer of predictions
-		for i in range(len(self._subjects_train)):#since we have subjects_train number of features here
+		for i in range(len(self._subjects_train_class)):#since we have subjects_train number of features here
 			ypred_1=[]
 			for j in range(len(self._subjects_test)):
 				ypred=self._first_layer_classifiers[i].predict(self._data_X_testing[j])
