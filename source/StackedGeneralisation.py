@@ -13,7 +13,7 @@ from statsmodels.robust import stand_mad
 class StackedGeneralisation:
 	def __init__(self,path_to_data):
 		self._Path2Data=path_to_data
-		self._subjects_train=range(1,13)
+		self._subjects_train=range(1,4)
 		self._subjects_train_testing=range(12,17)
 		self._subjects_test=range(17,24)
 		self._tmin = 0.0
@@ -224,6 +224,7 @@ class StackedGeneralisation:
 			self._data_X.append(X)
 			self._data_y.append(y)
 			clfr = Classify.LogisticRegression(X, y,None, None)
+			#clfr = Classify.RandomForest(X, y,None, None)
 			#clfr = RBMPipeline.LogRegWithRBMFeatures(X, y,None, None)
 			self._first_layer_classifiers.append(clfr)
 			
@@ -254,6 +255,7 @@ class StackedGeneralisation:
 		
 		print "shape =",np.shape(self._data_layer_1_X),np.shape(self._data_layer_1_y)
 		self._clfr2=Classify.LogisticRegression(self._data_layer_1_X, self._data_layer_1_y,None, None)
+		#self._clfr2=Classify.RandomForest(self._data_layer_1_X, self._data_layer_1_y,None, None)
 		#self._clfr2=RBMPipeline.LogRegWithRBMFeatures(self._data_layer_1_X, self._data_layer_1_y,None, None)
 
 	def TestSeconLayer(self):

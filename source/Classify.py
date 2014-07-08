@@ -53,7 +53,7 @@ def RandomForest(x_train, y_train, x_cv, y_cv,sw=None):
 	Random Forest
 	"""
 	#print "Classifier: Random Forest"
-	clfr =  RandomForestClassifier(n_estimators = 50, max_features="log2")
+	clfr =  RandomForestClassifier(n_estimators = 200,n_jobs=4)
 	if sw != None:
 		clfr.fit(x_train, y_train,sample_weight=sw)
 	else:
@@ -68,8 +68,8 @@ def LogisticRegression(x_train, y_train, x_cv, y_cv):
 	"""
 	Logistic Regression
 	"""
-	print "Classifier: Logistic Regression"
-	clfr = linear_model.LogisticRegression(penalty='l2', C=.03)
+	#print "Classifier: Logistic Regression"
+	clfr = linear_model.LogisticRegression(penalty='l2', C=6000)
 	#clfr = linear_model.LogisticRegression()
 	clfr.fit(x_train, y_train)
 	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
@@ -99,7 +99,7 @@ def NonLinearSupportVectorMachine(x_train, y_train, x_cv, y_cv):
 	Non Linear Support Vector Machine
 	"""
 	#print "Classifier: Support Vector Machine"
-	clfr = NuSVC(probability=True)
+	clfr = NuSVC(probability=False)
 	clfr.fit(x_train, y_train)
 	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
 	#if y_cv != None:
