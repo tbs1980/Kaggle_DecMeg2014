@@ -6,6 +6,8 @@ from sklearn import linear_model
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.svm import NuSVC
+from sklearn.lda import LDA
+from sklearn.qda import QDA
 
 def PrepareDataSets(x,y,testing_size=0.5,rand_state=0):
 	"""
@@ -53,7 +55,7 @@ def RandomForest(x_train, y_train, x_cv, y_cv,sw=None):
 	Random Forest
 	"""
 	#print "Classifier: Random Forest"
-	clfr =  RandomForestClassifier(n_estimators = 200,n_jobs=4)
+	clfr =  RandomForestClassifier(n_estimators = 400,n_jobs=4)
 	if sw != None:
 		clfr.fit(x_train, y_train,sample_weight=sw)
 	else:
@@ -69,7 +71,7 @@ def LogisticRegression(x_train, y_train, x_cv, y_cv):
 	Logistic Regression
 	"""
 	#print "Classifier: Logistic Regression"
-	clfr = linear_model.LogisticRegression(penalty='l2', C=6000)
+	clfr = linear_model.LogisticRegression(penalty='l2', C=0.03)
 	#clfr = linear_model.LogisticRegression()
 	clfr.fit(x_train, y_train)
 	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
@@ -78,12 +80,12 @@ def LogisticRegression(x_train, y_train, x_cv, y_cv):
 	
 	return clfr
 	
-def SupportVectorMachine(x_train, y_train, x_cv, y_cv,sw):
+def SupportVectorMachine(x_train, y_train, x_cv, y_cv,sw=None):
 	"""
 	Support Vector Machine
 	"""
 	#print "Classifier: Support Vector Machine"
-	clfr = SVC(probability=True)
+	clfr = SVC(probability=False)
 	if sw != None:
 		clfr.fit(x_train, y_train,sample_weight=sw)
 	else:
@@ -121,6 +123,33 @@ def SGDClassifier(x_train, y_train, x_cv, y_cv):
 	
 	return clfr
 	
+def LinearDiscriminantAnalysis(x_train, y_train, x_cv, y_cv):
+	"""
+	Linear Discriminant Analysis Classifier
+	"""
+	print "Linear Discriminant Analysis"
+	clfr = LDA()
+	clfr.fit(x_train, y_train)
+	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
+	#if y_cv != None:
+		#print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
+	
+	return clfr
+
+def QuadraticDiscriminantAnalysis(x_train, y_train, x_cv, y_cv):
+	"""
+	Quadratic Discriminant Analysis Classifier
+	"""
+	print "Quadratic Discriminant Analysis"
+	clfr = QDA()
+	clfr.fit(x_train, y_train)
+	#print 'Accuracy in training set: %f' % clfr.score(x_train, y_train)
+	#if y_cv != None:
+		#print 'Accuracy in cv set: %f' % clfr.score(x_cv, y_cv)
+	
+	return clfr
+
+
 def ComputeProbability(clfr, x):
 	""" Gets the probability of being good. """
 	

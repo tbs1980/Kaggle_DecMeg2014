@@ -13,12 +13,13 @@ from statsmodels.robust import stand_mad
 class StackedGeneralisation:
 	def __init__(self,path_to_data):
 		self._Path2Data=path_to_data
-		self._subjects_train=range(1,4)
+		self._subjects_train=range(1,13)
 		self._subjects_train_testing=range(12,17)
 		self._subjects_test=range(17,24)
 		self._tmin = 0.0
 		self._tmax = 0.5
 		self._first_layer_classifiers=[]
+		self._first_layer_classifiers_1=[]
 		self._data_X=[]
 		self._data_y=[]
 		self._data_layer_1_X=[]
@@ -137,7 +138,16 @@ class StackedGeneralisation:
 				
 		return XXret
 		
-
+	def ApplySVDToFeatures(self,mat,num_components):
+		u,s,v=np.linalg.svd(mat,full_matrices=False)
+		snew=np.zeros(np.shape(s))
+		if int(num_components) > snew.size-1 or num_components < 0:
+			print "input num_components ",num_components
+			print "changin to ",snew.size-1
+			num_components=snew.size-1
+		snew[0:int(num_components)]=s[0:int(num_components)]
+		S=np.diag(snew)
+		return np.dot(u,np.dot(S,v))
 
 	def ReshapeToFeaturesVector(self,XX):
 		"""
@@ -163,7 +173,9 @@ class StackedGeneralisation:
 		#XX=self.ApplySVD(XX,100)
 		XX=self.ApplyZnorm(XX)
 		#XX = self.ApplyWaveletTransform(XX)
-		return self.ReshapeToFeaturesVector(XX)
+		XX = self.ReshapeToFeaturesVector(XX)
+		#XX = self.ApplySVDToFeatures(XX,570)
+		return XX
 		#now take only the good top channels
 		#XXtop=XX[:,self._top_channels[:],:]
 		#XXtop=XX[:,self._top_channels[0:200],:]
@@ -224,9 +236,11 @@ class StackedGeneralisation:
 			self._data_X.append(X)
 			self._data_y.append(y)
 			clfr = Classify.LogisticRegression(X, y,None, None)
-			#clfr = Classify.RandomForest(X, y,None, None)
+			#clfr = Classify.QuadraticDiscriminantAnalysis(X, y,None, None)
+			#clfr_1 = Classify.SupportVectorMachine(X, y,None, None)
 			#clfr = RBMPipeline.LogRegWithRBMFeatures(X, y,None, None)
 			self._first_layer_classifiers.append(clfr)
+			#self._first_layer_classifiers_1.append(clfr_1)
 			
 		#make all the predictions into one vector
 		self._data_layer_1_y=np.concatenate(self._data_layer_1_y)
@@ -236,15 +250,20 @@ class StackedGeneralisation:
 		#now create first layer of predictions
 		for i in range(len(self._subjects_train)):
 			ypred_1=[]
-			cls_wt_clf=[]
+			#ypred_1_c1=[]
 			for j in range(len(self._subjects_train)):
 				ypred=self._first_layer_classifiers[i].predict(self._data_X[j])
-				print "error of classifer " ,i,"for data ",j,"=", float(sum(abs(ypred-self._data_y[j])))/float(len(self._data_y[j]))*100,"%"
+				#ypredc1=self._first_layer_classifiers_1[i].predict(self._data_X[j])
+				print "error of classifer 0 " ,i,"for data ",j,"=", float(sum(abs(ypred-self._data_y[j])))/float(len(self._data_y[j]))*100,"%"
+				#print "error of classifer 1 " ,i,"for data ",j,"=", float(sum(abs(ypredc1-self._data_y[j])))/float(len(self._data_y[j]))*100,"%"
 				ypred_1.append(ypred)
+				#ypred_1_c1.append(ypredc1)
 			
 			#concatenate all the predictions into a feature vector
 			ypred_1 = np.concatenate(ypred_1)
+			#ypred_1_c1 = np.concatenate(ypred_1_c1)
 			self._data_layer_1_X.append(ypred_1)
+			#self._data_layer_1_X.append(ypred_1_c1)
 		
 		self._data_layer_1_X=np.vstack(self._data_layer_1_X).T
 
@@ -271,12 +290,18 @@ class StackedGeneralisation:
 		#now create first layer of predictions
 		for i in range(len(self._subjects_train)):#since we have subjects_train number of features here
 			ypred_1=[]
+			#ypred_1_c1=[]
 			for j in range(len(self._subjects_train_testing)):
 				ypred=self._first_layer_classifiers[i].predict(self._data_X_testing[j])
+				#ypredc1=self._first_layer_classifiers_1[i].predict(self._data_X_testing[j])
 				ypred_1.append(ypred)
+				#ypred_1_c1.append(ypredc1)
 			
 			ypred_1 = np.concatenate(ypred_1)
+			#ypred_1_c1 = np.concatenate(ypred_1_c1)
+			
 			self._data_layer_1_X_testing.append(ypred_1)
+			#self._data_layer_1_X_testing.append(ypred_1_c1)
 			
 		self._data_layer_1_X_testing=np.vstack(self._data_layer_1_X_testing).T
 		

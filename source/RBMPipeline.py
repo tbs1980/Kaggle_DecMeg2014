@@ -14,7 +14,7 @@ def LogRegWithRBMFeatures(x_train, y_train, x_cv, y_cv):
 	classifier = Pipeline(steps=[('rbm', rbm), ('logistic', logistic)])
 	rbm.learning_rate = 0.06
 	rbm.n_iter = 20
-	rbm.n_components = 100
+	rbm.n_components = 5000
 	#logistic.C = 6000.0
 	
 	classifier.fit(x_train, y_train)
